@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>我的第一个博客</title>
+    <url>/2020/02/03/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E4%B8%AA%E5%8D%9A%E5%AE%A2/</url>
+    <content><![CDATA[<h3 id="3、缺页中断、断电异常、系统调用"><a href="#3、缺页中断、断电异常、系统调用" class="headerlink" title="3、缺页中断、断电异常、系统调用"></a>3、缺页中断、断电异常、系统调用</h3><p>​           尽管内核已经有了一些基本的异常处理能力，但仍需细化它来提供基于异常处理的重要的操作系统机制。</p>
+<h4 id="3-1-缺页中断（Page-Faults）"><a href="#3-1-缺页中断（Page-Faults）" class="headerlink" title="3.1 缺页中断（Page Faults）"></a>3.1 缺页中断（Page Faults）</h4><p>​    缺页中断，又称为页面失效，中断号为14（<code>T_PGFLT</code>），是一个很重要的中断，我们将在本次实验以及后续实验中经常用到。当处理器遇到一个缺页中断的时候，它将引起错误的线性地址存储到一个特殊的寄存器CR中。在<code>trap.c</code>中我们提供了函数<code>page_fault_handler()</code>来处理缺页异常。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">作业4</span><br><span class="line">	Modify trap_dispatch() to dispatch page fault exceptions to page_fault_handler(). You should now be able to get make grade to succeed on the faultread, faultreadkernel, faultwrite, and faultwritekernel tests. If any of them don&#39;t work, figure out why and fix them. Remember that you can boot JOS into a particular user program using make run-x or make run-x-nox.</span><br></pre></td></tr></table></figure>
+
+<p>​    在作业四中，它要求我们补全<code>trap_dispatch()</code>这个函数，使其能够将缺页中断交由<code>page_fault_handler()</code>处理，且在完善之后，我们要能够在<code>faultread``, faultreadkernel</code>, <code>faultwrite</code>, 和 <code>faultwritekernel</code>下成功<code>make grade</code>。</p>
+<h5 id="3-1-1-缺页中断的相关知识"><a href="#3-1-1-缺页中断的相关知识" class="headerlink" title="3.1.1 缺页中断的相关知识"></a>3.1.1 缺页中断的相关知识</h5><p>​    在正式开始开始代码的补全之前，我们要先了解清楚缺页中断的相关知识。</p>
+<ul>
+<li><p>什么是缺页中断</p>
+<p>进程线性地址空间里的页面不必常驻内存，在执行一条指令时，如果发现指令所要访问的页不在内存中（即存在位为0），那么就应停止该指令的执行，并产生一个“页不存在”异常，这时对应的故障处理程序会根据页表中的外存地址找到所缺的那一页，将其调入内存，以此排除故障，随后，原先引起这个异常的指令就可以继续执行了。这就是缺页中断。</p>
+</li>
+<li><p>缺页中断的处理步骤</p>
+<ul>
+<li>保护CPU现场</li>
+<li>分析中断原因</li>
+<li>转入缺页中断处理程序进行处理</li>
+<li>恢复CPU现场，继续执行未完成的指令</li>
+</ul>
+</li>
+<li><p>页面置换算法</p>
+<p>进程运行过程中，若发生缺页中断，内存中又没有空闲的物理内存时，为了能够将缺失的页转入内存之中，系统必须从内存中选择一页调到磁盘的对换区，换成我们要使用的页面进入内存。这里面需要用到一定的页面置换算法实现。</p>
+<p>下面简单的讲一下常用的最近最久未使用置换算法（Least Recently Used，LRU）:</p>
+<ul>
+<li><p>基本思想</p>
+<p>置换最近一段时间以来最长时间未访问过的页面。根据程序局部性原理，刚被访问过的页面很可能马上又要被访问，而较长时间内未被访问的页面，可能最近也不会被访问。</p>
+</li>
+<li><p>实现思路</p>
+<p>使用堆栈实现。系统使用特殊的堆栈来存放一个内存中的每一个页面的页号。每当访问一次页面就调整一次，即把被访问的页号从栈中移出在压入栈顶。因此，栈顶始终是最新被访问页面的页号，栈底始终是最近最久未使用的页号。当发生缺页中断时，总是淘汰栈底页号所对应的页面。</p>
+</li>
+</ul>
+<p>类似的算法还有先进先出置换算法（FIFO)，最佳置换算法（OPT）。前者会淘汰常被访问的页面，因此很少使用；后者无法实现。</p>
+</li>
+<li><p>缺页中断的种类</p>
+<ul>
+<li><p>软性</p>
+<p>软性页中断是指页缺失发生时，相关的页已经被加载进内存，但是还没有向内存管理单元（MMU）注册的情况。这时操作系统只需要在MMU中注册相关页对应的物理地址即可。</p>
+</li>
+<li><p>硬性</p>
+<p>与软性页缺失相反，硬性页缺失是指相关的页在页缺失发生时未被加载进内存的情况。这是操作系统需要：</p>
+<ul>
+<li>找到一个空闲的页，如果没有，那么就使用页面置换算法获取一个空闲的页，并注销被置换页在MMU内的记录</li>
+<li>将数据读入被选定的页</li>
+<li>向MMU注册该页</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="3-1-2-代码完善的准备工作"><a href="#3-1-2-代码完善的准备工作" class="headerlink" title="3.1.2 代码完善的准备工作"></a>3.1.2 代码完善的准备工作</h5><p>​     在正式开始完善<code>trap_dispatch()</code>之前，我们先来看看我们可能需要使用那些结构或函数。</p>
+<p>​    在第2节中讲到，在文件<code>trapentry.S</code>中每一个异常或中断都有自己的异常处理程序，每一个处理程序都要在栈上创建<code>Trapframe</code>结构，并且调用函数<code>trap()</code>，将其参数设置成所指向的对应的<code>Trapframe</code>的指针。显然，我们这次也必然需要使用到它们。而在作业三中，我们已经知道<code>_alltrap</code>可以调用<code>ken/trap.c</code>中的<code>trap()</code>函数。我们再来看看<code>_alltrap</code>的代码：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line">_alltraps:</span><br><span class="line">		<span class="meta"># a struct Trapframe</span></span><br><span class="line">		<span class="meta"># everything below tf_trapno is already on stack</span></span><br><span class="line"></span><br><span class="line">		<span class="meta"># we should push %ds %es in order after tf_trapno is pushed</span></span><br><span class="line">		pushl %ds</span><br><span class="line">		pushl %es</span><br><span class="line"></span><br><span class="line">		<span class="meta"># registers involved in struct PushRegs can be pushed</span></span><br><span class="line">		<span class="meta"># by pusha at a time</span></span><br><span class="line">		pushal</span><br><span class="line"></span><br><span class="line">		<span class="meta"># load GD_KD into %ds and %es</span></span><br><span class="line">		movl $GD_KD,%eax</span><br><span class="line">		movw %ax,%ds</span><br><span class="line">		movw %ax,%es</span><br><span class="line"></span><br><span class="line">		pushl %esp</span><br><span class="line">		</span><br><span class="line">		<span class="meta"># below copy from entry.s</span></span><br><span class="line">		# <span class="function">Clear the frame pointer <span class="title">register</span> <span class="params">(EBP)</span></span></span><br><span class="line"><span class="function">		<span class="meta"># so that once we get into debugging C code,</span></span></span><br><span class="line"><span class="function">		<span class="meta"># stack backtraces will be terminated properly.</span></span></span><br><span class="line">		movl	$0x0,%ebp			# nuke frame pointer</span><br><span class="line"></span><br><span class="line">		call trap</span><br></pre></td></tr></table></figure>
+
+<p>​    可以看到，它通过<code>pushl %esp ... call trap</code>实现了对<code>trap()</code>的调用，随后<code>trap()</code>就会处理这个异常或者将其分派给特定的处理函数。到这里，我们需要来看看<code>trap()</code>函数：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line">trap(struct Trapframe *tf)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">// The environment may have set DF and some versions</span></span><br><span class="line">	<span class="comment">// of GCC rely on DF being clear</span></span><br><span class="line">	<span class="function"><span class="keyword">asm</span> <span class="title">volatile</span><span class="params">(<span class="string">"cld"</span> ::: <span class="string">"cc"</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Check that interrupts are disabled.  If this assertion</span></span><br><span class="line">	<span class="comment">// fails, DO NOT be tempted to fix it by inserting a "cli" in</span></span><br><span class="line">	<span class="comment">// the interrupt path.</span></span><br><span class="line">	assert(!(read_eflags() &amp; FL_IF));</span><br><span class="line"></span><br><span class="line">	cprintf(<span class="string">"Incoming TRAP frame at %p\n"</span>, tf);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> ((tf-&gt;tf_cs &amp; <span class="number">3</span>) == <span class="number">3</span>) &#123;</span><br><span class="line">		<span class="comment">// Trapped from user mode.</span></span><br><span class="line">		assert(curenv);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Copy trap frame (which is currently on the stack)</span></span><br><span class="line">		<span class="comment">// into 'curenv-&gt;env_tf', so that running the environment</span></span><br><span class="line">		<span class="comment">// will restart at the trap point.</span></span><br><span class="line">		curenv-&gt;env_tf = *tf;</span><br><span class="line">		<span class="comment">// The trapframe on the stack should be ignored from here on.</span></span><br><span class="line">		tf = &amp;curenv-&gt;env_tf;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Record that tf is the last real trapframe so</span></span><br><span class="line">	<span class="comment">// print_trapframe can print some additional information.</span></span><br><span class="line">	last_tf = tf;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Dispatch based on what type of trap occurred</span></span><br><span class="line">	trap_dispatch(tf);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Return to the current environment, which should be running.</span></span><br><span class="line">	assert(curenv &amp;&amp; curenv-&gt;env_status == ENV_RUNNING);</span><br><span class="line">	env_run(curenv);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<pre><code>通过解读注释可以知道，在`trap()`函数中，它会执行`if ((tf-&gt;tf_cs &amp; 3) == 3)`的判断，如果成立，则代表发生的中断是用户陷入内核，否则是内核陷入内核。如果成立，那么，将当前栈中的`trap frame`拷贝下来，放进`curenv-&gt;env_tf`中，也就是当前环境之中，这样的话，当前环境的运行就会重新开始。同时，通过`tf = &amp;curenv-&gt;env_tf`使得当前栈中的`trapframe`被忽略。之后，调用`trap_dispatch()`函数，用于根据陷阱的不同类型来确定不同函数的分发。最后，回归到当前环境继续执行这个程序。</code></pre><p>​    除此之外，我们少不了要了解一下<code>Trapframe</code>结构的具体的定义：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Trapframe</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">PushRegs</span> <span class="title">tf_regs</span>;</span></span><br><span class="line">	<span class="keyword">uint16_t</span> tf_es;</span><br><span class="line">	<span class="keyword">uint16_t</span> tf_padding1;</span><br><span class="line">	<span class="keyword">uint16_t</span> tf_ds;</span><br><span class="line">	<span class="keyword">uint16_t</span> tf_padding2;</span><br><span class="line">	<span class="keyword">uint32_t</span> tf_trapno;</span><br><span class="line">	<span class="comment">/* below here defined by x86 hardware */</span></span><br><span class="line">	<span class="keyword">uint32_t</span> tf_err;</span><br><span class="line">	<span class="keyword">uintptr_t</span> tf_eip;</span><br><span class="line">	<span class="keyword">uint16_t</span> tf_cs;</span><br><span class="line">	<span class="keyword">uint16_t</span> tf_padding3;</span><br><span class="line">	<span class="keyword">uint32_t</span> tf_eflags;</span><br><span class="line">	<span class="comment">/* below here only when crossing rings, such as from user to kernel */</span></span><br><span class="line">	<span class="keyword">uintptr_t</span> tf_esp;</span><br><span class="line">	<span class="keyword">uint16_t</span> tf_ss;</span><br><span class="line">	<span class="keyword">uint16_t</span> tf_padding4;</span><br><span class="line">&#125; __attribute__((packed));</span><br></pre></td></tr></table></figure>
+
+<p>​    其中，<code>trapno</code>就是中断号。因此在 trap_dispatch 函数中我们需要根据输入的 <code>Trapframe</code>指针 <code>tf</code> 中的<code>tf_trapno</code>成员来判断到来的中断是什么中断。</p>
+<h5 id="3-1-3-完善代码"><a href="#3-1-3-完善代码" class="headerlink" title="3.1.3 完善代码"></a>3.1.3 完善代码</h5><p>​    整体设计思路：首先我们需要判断该用户是否拥有缺页处理程序，如果没有，那么内核就会将用户进程销毁；如果已经有了对应的故障处理程序，就应该判断是哪种缺页错误，然后将控制权转移给错误处理程序，切换到对应位置开始运行。</p>
+<p>​    具体实现思路：如果输入的<code>Trapframe</code>指针<code>tf</code>中的中断号<code>tf_trapno</code>是<code>T_PGFLT</code>,那么就说明是碰到了缺页中断，随后就调用<code>page_fault_handler</code>函数，交给它处理。另外，函数的输入参数是逆序压在堆栈上的。中断的<code>Errorcode</code>或者<code>0</code>又CPU压入，而它下面由<code>Handler</code>压入。</p>
+<p>​    所以完整的<code>trap_dispatch()</code>代码就是：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">trap_dispatch(struct Trapframe *tf)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">// Handle processor exceptions.</span></span><br><span class="line">	<span class="comment">// LAB 3: Your code here.</span></span><br><span class="line">	<span class="keyword">if</span>(tf-&gt;tf_trapno == T_PGFLT)</span><br><span class="line">	&#123;</span><br><span class="line">		page_fault_handler(tf);</span><br><span class="line">		<span class="keyword">return</span>;	</span><br><span class="line">	&#125;	</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Unexpected trap: The user process or the kernel has a bug.</span></span><br><span class="line">	print_trapframe(tf);</span><br><span class="line">	<span class="keyword">if</span> (tf-&gt;tf_cs == GD_KT)</span><br><span class="line">		panic(<span class="string">"unhandled trap in kernel"</span>);</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">		env_destroy(curenv);</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​    测试结果如下所示：</p>
+<ul>
+<li><code>make run-faultread</code></li>
+</ul>
+<p>![make run-faultread](E:/typora图片/make run-faultread.JPG)</p>
+<ul>
+<li><code>make run-faultreadkernel</code></li>
+</ul>
+<p>![make run-faultreadkernel](E:/typora图片/make run-faultreadkernel.JPG)</p>
+<ul>
+<li><code>make run-faultwrite</code></li>
+</ul>
+<p>![make run-faultwrite](E:/typora图片/make run-faultwrite.JPG)</p>
+<ul>
+<li><code>make run-faultwritekernel</code></li>
+</ul>
+<p>![make run-faultwritekernel](E:/typora图片/make run-faultwritekernel.JPG)</p>
+<ul>
+<li><code>make grade</code></li>
+</ul>
+<p>![make grade](E:/typora图片/make grade.JPG)</p>
+<hr>
+<h4 id="3-2-断点异常（Breakpoint-Exception）"><a href="#3-2-断点异常（Breakpoint-Exception）" class="headerlink" title="3.2 断点异常（Breakpoint Exception）"></a>3.2 断点异常（Breakpoint Exception）</h4><p>​    断点异常，中断号是3（<code>T_BRKPT</code>），通常是用来使调试器可以在程序的任意位置设置断点，调试器临时将该处的指令替换成一字节的<code>int3</code>软中断指令。在<code>JOS</code>中，我们扩大它的适用范围，将其设置成原始的伪系统调用（<code>primtive pseudo-system call</code> ），使得任何用户都可以调用它来引用<code>JOS</code>的内核监视器（<code>JOS kernel monitor</code>）。在用户模式下实现的<code>lib/panic.c</code>中的<code>panic()</code>函数在输出信息之后就会使用<code>int3</code>中断。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">作业 5 </span><br><span class="line">Modify trap_dispatch() to make breakpoint exceptions invoke the kernel monitor. You should now be able to get make grade to succeed on the breakpoint test.</span><br></pre></td></tr></table></figure>
+
+<p>​    在作业5中，它要求我们修改<code>trap_dispatch()</code>函数来使得任何用户都可以调用它来引用<code>JOS</code>的内核监视器。</p>
+<p>​    前面我们已经修改了<code>trap_dispatch()</code>完成了缺页中断的处理，而断点异常的处理和缺页中断的处理其实是十分相似的，只不过这里我们要处理的中断号变成了<code>T_BRKPT</code>。在<code>kernel/monitor.c</code>中的<code>monitor</code>函数其实就是上面谈到的<code>kernel monitor</code>。修改后的<code>trap_dispatch()</code>代码如下：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">trap_dispatch(struct Trapframe *tf)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">// Handle processor exceptions.</span></span><br><span class="line">	<span class="comment">// LAB 3: Your code here.</span></span><br><span class="line">	<span class="keyword">if</span>(tf-&gt;tf_trapno == T_PGFLT)</span><br><span class="line">	&#123;</span><br><span class="line">		page_fault_handler(tf);</span><br><span class="line">		<span class="keyword">return</span>;	</span><br><span class="line">	&#125;	</span><br><span class="line">	<span class="keyword">if</span>(tf-&gt;tf_trapno == T_BRKPT)</span><br><span class="line">	&#123;</span><br><span class="line">		monitor(tf);</span><br><span class="line">		<span class="keyword">return</span>;	</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Unexpected trap: The user process or the kernel has a bug.</span></span><br><span class="line">	print_trapframe(tf);</span><br><span class="line">	<span class="keyword">if</span> (tf-&gt;tf_cs == GD_KT)</span><br><span class="line">		panic(<span class="string">"unhandled trap in kernel"</span>);</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">		env_destroy(curenv);</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​    运行结果如下：</p>
+<p><img src="E:/typora%E5%9B%BE%E7%89%87/breakpoint.JPG" alt="breakpoint"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">问题 2</span><br><span class="line">1、 The break point test case will either generate a break point exception or a general protection fault depending on how you initialized the break point entry in the IDT (i.e.， your call to SETGATE from trap_init). Why? How do you need to set it up in order to get the breakpoint exception to work as specified above and what incorrect setup would cause it to trigger a general protection fault?</span><br><span class="line">2、 What do you think is the point of these mechanisms， particularly in light of what the user&#x2F;softint test program does?</span><br></pre></td></tr></table></figure>
+
+<p>解答：</p>
+<ol>
+<li>通过实验发现，出现这个现象的问题就是在设置IDT表中的<code>breakpoint exception</code>的表项时，如果我们把表项中的DPL字段设置为3，则会触发<code>break point execption</code>；如果设置为0，则会触发<code>general protection exception</code>。DPL字段代表的含义是段描述符优先级（<code>Descriptor Privileged Level</code>），如果我们想要当前执行的程序能够跳转到这个描述符所指向的程序那里继续执行的话，有个要求，那就是要求当前运行程序的CPL，RPL的最大值需要不超过DPL，否则就会出现优先级低的代码试图去访问优先级高的代码的情况，就会触发<code>general protection exception</code>。那么我们的测试程序首先运行于用户态，它的CPL为3，当异常发生时，它希望去执行<code>int3</code>指令，这是一个系统级别的指令，用户态命令的CPL一定大于<code>int3</code>的DPL，所以就会触发<code>general protection exception</code>，但是如果把IDT这个表项的DPL设置为3时，就不会出现这样的现象了，这时如果再出现异常，肯定是因为我们还没有编写处理<code>break point exception</code>的程序引起的，所以是<code>break point exception</code>。</li>
+<li>这些机制实现的关键在于操作系统的软中断机制，这些机制的目的在于保护操作系统。中断源发出软中断信号后, CPU接收进程。 在得到信号之后进行中断处理或者完成软中断信号所对应的功能。 从作业5可以看出，中断源发出断点的信号后,程序通过处理，令其触发系统内核监视器。</li>
+</ol>
+]]></content>
+  </entry>
+</search>
