@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>Golang配置</title>
+    <link href="/Golang%E9%85%8D%E7%BD%AE/"/>
+    <url>/Golang%E9%85%8D%E7%BD%AE/</url>
+    
+    <content type="html"><![CDATA[<h2 id="Golang调试工具-Delve"><a href="#Golang调试工具-Delve" class="headerlink" title="Golang调试工具-Delve"></a>Golang调试工具-Delve</h2><h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>在已经安装了Golang的前提下，按以下步骤安装调试工具delve：</p><ol><li>使用<code>go env</code>命令查看<code>GOPATH</code>取值，一般是<code>/root/go</code></li><li>配置环境变量：<code>export GOPATH=/root/go</code></li><li>进入根目录，安装delve：<code>go install github.com/go-delve/delve/cmd/dlv@latest</code></li><li>配置链接：<code>ln -s $&#123;GOPATH&#125;/bin/dlv /usr/local/bin/dlv</code></li></ol>]]></content>
+    
+    
+    <categories>
+      
+      <category>GOLANG之旅</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>GOLANG</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Goland使用</title>
+    <link href="/Goland%E4%BD%BF%E7%94%A8/"/>
+    <url>/Goland%E4%BD%BF%E7%94%A8/</url>
+    
+    <content type="html"><![CDATA[<h3 id="Goproxy设置"><a href="#Goproxy设置" class="headerlink" title="Goproxy设置"></a>Goproxy设置</h3><ul><li><p>推荐两个代理地址：</p><ul><li>阿里云 <code>https://mirrors.aliyun.com/goproxy/</code></li><li>goproxy.io的 <code>https://goproxy.io/</code></li></ul></li><li><p>在Goland里打开”settings-Go-Go Modules”，在Environment设置GOPROXY，例如：<code>GOPROXY=https://mirrors.aliyun.com/goproxy/</code></p></li><li><p>在Goland里新打开一个termnial，<code>go env</code>，GOPROXY已经被修改。</p></li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>工具使用</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>GOLANG</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Typora使用</title>
+    <link href="/Typora%E4%BD%BF%E7%94%A8/"/>
+    <url>/Typora%E4%BD%BF%E7%94%A8/</url>
+    
+    <content type="html"><![CDATA[<ul><li><p>Typora下载地址：<code>https://www.123pan.com/s/HQeA-UX1Sh</code></p></li><li><p>主题下载地址：<code>https://theme.typoraio.cn/theme/Ladder/</code></p></li><li><p>自定义快捷键：</p><ul><li><p>进入”文件-偏好设置-通用”，点击”高级设置-打开高级设置”</p></li><li><p>打开<code>conf.user.json</code>文件，在<code>keyBinding</code>的value里加上键值对。key就是在Typora里你看到的功能名字，val就是你要的快捷键组合方式（组合符号是+）。</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-attr">&quot;keyBinding&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">&#123;</span><br><span class="hljs-attr">&quot;代码&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Ctrl+Shift+C&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-punctuation">&#125;</span><br></code></pre></td></tr></table></figure></li><li><p>修改后，重启Typora生效</p></li></ul></li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>工具使用</category>
+      
+    </categories>
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Hexo文档</title>
+    <link href="/Hexo%E6%96%87%E6%A1%A3/"/>
+    <url>/Hexo%E6%96%87%E6%A1%A3/</url>
+    
+    <content type="html"><![CDATA[<h1 id="Hexo使用文档"><a href="#Hexo使用文档" class="headerlink" title="Hexo使用文档"></a>Hexo使用文档</h1><h2 id="前置安装"><a href="#前置安装" class="headerlink" title="前置安装"></a>前置安装</h2><ul><li>安装npm：<code>https://nodejs.org/en/download/</code></li><li>安装hexo：<code>npm install -g hexo-cli</code></li></ul><h2 id="图床"><a href="#图床" class="headerlink" title="图床"></a>图床</h2><h3 id="Github做图床"><a href="#Github做图床" class="headerlink" title="Github做图床"></a>Github做图床</h3><p>创建Github仓库，将图片资源推送到这个仓库。随后按照以下步骤生成图片的外链：</p><ul><li>进入Github仓库，查看图片资源，从而获得图片访问地址，形如：<code>https://github.com/yqw-nku/yqw-nku.github.io/blob/blog_source/images/common/yqw.jpg</code></li><li>修改链接里的blob为raw，得到<code>https://github.com/yqw-nku/yqw-nku.github.io/raw/blog_source/images/common/yqw.jpg</code>，这就是最终的图片外链地址</li></ul><h2 id="Hexo-Git仓库使用"><a href="#Hexo-Git仓库使用" class="headerlink" title="Hexo-Git仓库使用"></a>Hexo-Git仓库使用</h2><p>目前已推送blog_source分支存储Hexo搭建时的源码，但是node_modules目录没有上传（放到是主题信息，.gitignore里忽略了），所以当一台新设备拉取仓库后，需要先执行<code>npm install --save hexo-theme-fluid</code>安装主题才可以继续使用。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Hexo配置</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>工具使用</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>限流模式</title>
+    <link href="/%E9%99%90%E6%B5%81%E6%A8%A1%E5%BC%8F/"/>
+    <url>/%E9%99%90%E6%B5%81%E6%A8%A1%E5%BC%8F/</url>
+    
+    <content type="html"><![CDATA[<h1 id="限流的目标和模式"><a href="#限流的目标和模式" class="headerlink" title="限流的目标和模式"></a>限流的目标和模式</h1><p>任何一个系统的运算、存储、网络资源都不是无限的，当系统资源不足以支撑外部超过预期的突发流量时，就应该要有取舍，建立面对超额流量自我保护的机制：“限流”。</p><p>为了方便后续行文，先假定一个问题场景，后续围绕这个问题场景来说明限流的意义以及限流的手段。</p><h2 id="问题场景"><a href="#问题场景" class="headerlink" title="问题场景"></a>问题场景</h2><p>场景1：假定有一台服务器，接入了100终端。每个终端每秒会向服务器请求执行1次业务，服务器每秒可以处理90次业务，每个业务超时时间是5s。最坏的情况下，可能会有10个终端在这5s内阻塞等待，影响终端正常业务。同时，服务器带宽资源也存在浪费。</p><p>场景2：假定有一台服务器，接入了100终端。每个终端每秒会向服务器请求执行1次业务A。服务器上除了业务A外，还存在诸多其他业务。在不限制资源的情况下，服务器每秒可以处理1000次业务A。这样看似满足了业务A的需求，但是会导致服务器上的带宽、CPU、内存以及磁盘I&#x2F;O等都被业务A所占用，其余业务无法正常响应。</p><p>为了避免上述问题出现，需要进行恰当的流量控制。从以下几个方面考量：</p><ul><li>限流的指标是什么：什么情况下要限流？要限制什么流量？要限制到多大流量？</li><li>限流的策略是什么：对于无法处理的请求&#x2F;流量，是选择拒绝服务（否决式限流）还是进入队列等待被执行（阻塞式限流）；</li><li>限流的手段是什么：常见的限流手段有固定时间窗口模式、滑动窗口模式、漏桶模式、令牌桶模式。</li></ul><h2 id="流量指标"><a href="#流量指标" class="headerlink" title="流量指标"></a>流量指标</h2><p>常见的流量指标有TPS、HPS、QPS。</p><ul><li>每秒事务数（Transactions per Second，TPS）TPS 是衡量信息系统吞吐量的最终标准。“事务”可以理解为一个逻辑上具备原子性的业务操作。比如你在Bookstore 买了一本书要进行支付，这个“支付”就是一笔业务操作，无论支付成功还是不成功，这个操作在逻辑上就是原子的，即逻辑上不可能让你买本书可以成功支付前面 200 页，但失败了后面 300 页。</li><li>每秒请求数（Hits per Second，HPS）：HPS 是指每秒从客户端发向服务端的请求数（这里你要把 Hits 理解为 Requests 而不是 Clicks，国内某些翻译把它理解为“每秒点击数”多少有点望文生义的嫌疑）。如果只要一个请求就能完成一笔业务，那 HPS 与 TPS 是等价的，但在一些场景里（尤其常见于网页中），一笔业务可能需要多次请求才能完成。比如你在 Fenix’s Bookstore 买了一本书要进行支付，尽管在操作逻辑上它是原子的，但在技术实现上，除非你是直接在银行开的商城中购物能够直接扣款，否则这个操作就很难在一次请求里完成，总要经过显示支付二维码、扫码付款、校验支付是否成功等过程，中间不可避免地会发生多次请求</li><li>每秒查询数（Queries per Second，QPS）：QPS 是指一台服务器能够响应的查询次数。如果只有一台服务器来应答请求，那 QPS 和 HPS 是等价的，但在分布式系统中，一个请求的响应，往往要由后台多个服务节点共同协作来完成。比如你在Bookstore 买了一本书要进行支付，在扫描支付二维码时，尽管客户端只发送了一个请求，但在这背后，服务端很可能需要向仓储服务确认库存信息避免超卖、向支付服务发送指令划转货款、向用户服务修改用户的购物积分，等等，这里面每次的内部访问，都要消耗掉一次或多次查询数。</li></ul><p>总体来说，以上这三点都是基于调用计数的指标，而在整体目标上，我们当然最希望能够基于 TPS 来限流，因为信息系统最终是为人类用户提供服务的，用户并不关心业务到底是由多少个请求、多少个后台查询共同协作来实现的。</p><h2 id="限流模式"><a href="#限流模式" class="headerlink" title="限流模式"></a>限流模式</h2><h3 id="固定时间窗口模式"><a href="#固定时间窗口模式" class="headerlink" title="固定时间窗口模式"></a>固定时间窗口模式</h3><h3 id="滑动时间窗口模式"><a href="#滑动时间窗口模式" class="headerlink" title="滑动时间窗口模式"></a>滑动时间窗口模式</h3><h3 id="漏桶模式"><a href="#漏桶模式" class="headerlink" title="漏桶模式"></a>漏桶模式</h3><h3 id="令牌桶模式"><a href="#令牌桶模式" class="headerlink" title="令牌桶模式"></a>令牌桶模式</h3>]]></content>
+    
+    
+    <categories>
+      
+      <category>方案设计</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>高可用</tag>
+      
+      <tag>高并发</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  
+</search>
