@@ -25,4 +25,7 @@ tags:
 进入调试模式，有两种模式，推荐第一种：
 
 1. 先编译，得到二进制，然后采用`dlv exec {bin_path}`
-2. 直接接入：`dlv main.go`
+
+   https://github.com/yqw-nku/yqw-nku.github.io/raw/blog_source/images/2023-12/1.png
+
+2. 进入main.go所在目录，执行：`dlv debug`
