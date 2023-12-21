@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>常见设计策略</title>
+    <link href="/%E5%B8%B8%E8%A7%81%E8%AE%BE%E8%AE%A1%E7%AD%96%E7%95%A5/"/>
+    <url>/%E5%B8%B8%E8%A7%81%E8%AE%BE%E8%AE%A1%E7%AD%96%E7%95%A5/</url>
+    
+    <content type="html"><![CDATA[<h2 id="文件变更判断"><a href="#文件变更判断" class="headerlink" title="文件变更判断"></a>文件变更判断</h2><p>优先利用：文件的创建时间、文件的变更时间、文件的大小等属性进行判断，其次考虑：文件的md5进行判断。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>方案设计</category>
+      
+    </categories>
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Golang调试工具-Delve</title>
     <link href="/Golang%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7Delve/"/>
     <url>/Golang%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7Delve/</url>
